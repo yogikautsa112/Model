@@ -7,12 +7,11 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 app = FastAPI()
 
 # Google Drive File IDs
-MODEL_ID = "1FdRWyKGorKka1bYn19Z3akCZ-v_1Sfcf"  # Ganti dengan File ID model kamu
-TOKENIZER_ID = "1Sxe-5Ti5-cGN2kbIBee9_fIP3NV92Ach"  # Ganti dengan File ID tokenizer
+MODEL_ID = "16JvfwZGglWG9h_freKo2Ep6CzKUoH-B-"  # Ganti dengan File ID model kamu
 
 # Folder penyimpanan model
 MODEL_PATH = "models/t5-model"
-TOKENIZER_PATH = "models/t5-tokenizer"
+TOKENIZER_PATH = "token/"
 
 # Pastikan folder models ada
 os.makedirs("models", exist_ok=True)
@@ -21,10 +20,6 @@ os.makedirs("models", exist_ok=True)
 if not os.path.exists(MODEL_PATH):
     print("Downloading model...")
     gdown.download(f"https://drive.google.com/uc?id={MODEL_ID}", MODEL_PATH, quiet=False)
-    
-if not os.path.exists(TOKENIZER_PATH):
-    print("Downloading tokenizer...")
-    gdown.download(f"https://drive.google.com/uc?id={TOKENIZER_ID}", TOKENIZER_PATH, quiet=False)
 
 # Load model dan tokenizer
 tokenizer = T5Tokenizer.from_pretrained(TOKENIZER_PATH, local_files_only=True)
@@ -45,3 +40,4 @@ def ask_question(request: QuestionRequest):
 @app.get("/")
 def root():
     return {"message": "T5 Model API is running!"}
+    
