@@ -1,43 +1,31 @@
-import os
-import gdown
 from fastapi import FastAPI
 from pydantic import BaseModel
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+from dotenv import load_dotenv
+import os
 
 app = FastAPI()
 
-# Google Drive File IDs
-MODEL_ID = "16JvfwZGglWG9h_freKo2Ep6CzKUoH-B-"  # Ganti dengan File ID model kamu
+# Load Hugging Face Token dari .env
+load_dotenv()
+HF_TOKEN = os.getenv("HF_TOKEN")
 
-# Folder penyimpanan model
-MODEL_PATH = "models/t5-model"
-TOKENIZER_PATH = "token/"
+# Load Model dari Hugging Face
+model_name = "goy2/t5-squad2-checkpoint"  # Ganti dengan nama model di Hugging Face
+tokenizer = T5Tokenizer.from_pretrained(model_name, token=HF_TOKEN)
+model = T5ForConditionalGeneration.from_pretrained(model_name, token=HF_TOKEN)
 
-# Pastikan folder models ada
-os.makedirs("models", exist_ok=True)
+class InputText(BaseModel):
+    text: str
 
-# Download model jika belum ada
-if not os.path.exists(MODEL_PATH):
-    print("Downloading model...")
-    gdown.download(f"https://drive.google.com/uc?id={MODEL_ID}", MODEL_PATH, quiet=False)
-
-# Load model dan tokenizer
-tokenizer = T5Tokenizer.from_pretrained(TOKENIZER_PATH, local_files_only=True)
-model = T5ForConditionalGeneration.from_pretrained(MODEL_PATH, local_files_only=True)
-
-class QuestionRequest(BaseModel):
-    question: str
-    context: str
-
-@app.post("/ask")
-def ask_question(request: QuestionRequest):
-    input_text = f"question: {request.question} context: {request.context}"
+@app.post("/generate")
+def generate_text(input_data: InputText):
+    input_text = input_data.text
     input_ids = tokenizer(input_text, return_tensors="pt").input_ids
-    output_ids = model.generate(input_ids)
-    answer = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-    return {"question": request.question, "answer": answer}
+    output = model.generate(input_ids)
+    result = tokenizer.decode(output[0], skip_special_tokens=True)
+    return {"output": result}
 
 @app.get("/")
 def root():
     return {"message": "T5 Model API is running!"}
-    
